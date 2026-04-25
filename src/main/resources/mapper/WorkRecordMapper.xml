@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kele.gongshibackend.mapper.WorkRecordMapper">
+
+    <select id="selectWeeklyHoursByProjectAndMonth" resultType="map">
+        SELECT
+            FLOOR((DAYOFMONTH(work_date) - 1) / 7) + 1 AS week,
+            IFNULL(SUM(hours), 0) AS hours
+        FROM work_record
+        WHERE project_id = #{projectId}
+          AND DATE_FORMAT(work_date, '%Y-%m') = #{month}
+          AND del_flag = 0
+          AND FLOOR((DAYOFMONTH(work_date) - 1) / 7) + 1 BETWEEN 1 AND 4
+        GROUP BY week
+        ORDER BY week
+    </select>
+
+    <select id="selectTopProjectHoursByMonth" resultType="map">
+        SELECT
+            p.id AS projectId,
+            p.project_name AS projectName,
+            IFNULL(this_month.hours, 0) AS totalHours,
+            CASE
+                WHEN last_month.hours IS NULL OR last_month.hours = 0 THEN 0
+                ELSE ROUND((this_month.hours - last_month.hours) / last_month.hours * 100, 0)
+            END AS trend
+        FROM project p
+        LEFT JOIN (
+            SELECT project_id, SUM(hours) AS hours
+            FROM work_record
+            WHERE DATE_FORMAT(work_date, '%Y-%m') = #{month}
+              AND del_flag = 0
+            GROUP BY project_id
+        ) this_month ON p.id = this_month.project_id
+        LEFT JOIN (
+            SELECT project_id, SUM(hours) AS hours
+            FROM work_record
+            WHERE DATE_FORMAT(work_date, '%Y-%m') = #{lastMonth}
+              AND del_flag = 0
+            GROUP BY project_id
+        ) last_month ON p.id = last_month.project_id
+        WHERE p.del_flag = 0
+          AND (this_month.hours IS NOT NULL OR last_month.hours IS NOT NULL)
+        ORDER BY totalHours DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

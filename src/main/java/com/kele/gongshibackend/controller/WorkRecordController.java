@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kele.gongshibackend.common.Result;
 import com.kele.gongshibackend.entity.WorkRecord;
 import com.kele.gongshibackend.service.WorkRecordService;
+import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
+import com.kele.gongshibackend.vo.TopProjectsStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -229,5 +231,29 @@ public class WorkRecordController {
 
         Page<WorkRecord> result = workRecordService.page(page, queryWrapper);
         return Result.success("查询成功", result);
+    }
+
+    /**
+     * 按项目按周统计工时
+     */
+    @Operation(summary = "按项目按周统计工时")
+    @GetMapping("/stats/project-weekly")
+    public Result<ProjectWeeklyStatsVO> getProjectWeeklyStats(
+            @Parameter(description = "项目ID") @RequestParam Long projectId,
+            @Parameter(description = "年月，格式 YYYY-MM") @RequestParam String month) {
+        ProjectWeeklyStatsVO stats = workRecordService.getProjectWeeklyStats(projectId, month);
+        return Result.success("查询成功", stats);
+    }
+
+    /**
+     * 统计工时排名前N的项目
+     */
+    @Operation(summary = "统计工时排名前N的项目")
+    @GetMapping("/stats/top-projects")
+    public Result<TopProjectsStatsVO> getTopProjectsStats(
+            @Parameter(description = "年月，格式 YYYY-MM") @RequestParam String month,
+            @Parameter(description = "返回数量，默认5") @RequestParam(defaultValue = "5") Integer limit) {
+        TopProjectsStatsVO stats = workRecordService.getTopProjectsStats(month, limit);
+        return Result.success("查询成功", stats);
     }
 }
