@@ -2,6 +2,8 @@ package com.kele.gongshibackend.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.kele.gongshibackend.entity.WorkRecord;
+import com.kele.gongshibackend.vo.WorkRecordExportQuery;
+import com.kele.gongshibackend.vo.WorkRecordExportVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -38,4 +40,11 @@ public interface WorkRecordMapper extends BaseMapper<WorkRecord> {
             @Param("month") String month,
             @Param("lastMonth") String lastMonth,
             @Param("limit") Integer limit);
+
+    /**
+     * 导出工时记录连表查询
+     * @param query 查询条件
+     * @return 导出数据列表
+     */
+    List<WorkRecordExportVO> selectForExport(@Param("query") WorkRecordExportQuery query);
 }

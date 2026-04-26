@@ -8,6 +8,8 @@ import com.kele.gongshibackend.service.ProjectService;
 import com.kele.gongshibackend.service.WorkRecordService;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
+import com.kele.gongshibackend.vo.WorkRecordExportQuery;
+import com.kele.gongshibackend.vo.WorkRecordExportVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -93,5 +95,10 @@ public class WorkRecordServiceImpl extends ServiceImpl<WorkRecordMapper, WorkRec
         LocalDate date = LocalDate.parse(month + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         LocalDate lastMonth = date.minusMonths(1);
         return lastMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    }
+
+    @Override
+    public List<WorkRecordExportVO> getExportData(WorkRecordExportQuery query) {
+        return baseMapper.selectForExport(query);
     }
 }

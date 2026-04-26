@@ -1,5 +1,6 @@
 package com.kele.gongshibackend.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kele.gongshibackend.common.Result;
@@ -7,12 +8,18 @@ import com.kele.gongshibackend.entity.WorkRecord;
 import com.kele.gongshibackend.service.WorkRecordService;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
+import com.kele.gongshibackend.vo.WorkRecordExportQuery;
+import com.kele.gongshibackend.vo.WorkRecordExportVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.kele.gongshibackend.util.SecurityUtil;
@@ -255,5 +262,33 @@ public class WorkRecordController {
             @Parameter(description = "返回数量，默认5") @RequestParam(defaultValue = "5") Integer limit) {
         TopProjectsStatsVO stats = workRecordService.getTopProjectsStats(month, limit);
         return Result.success("查询成功", stats);
+    }
+
+    /**
+     * 导出工时记录
+     */
+    @Operation(summary = "导出工时记录")
+    @GetMapping("/export")
+    public void export(
+            @Parameter(description = "用户ID（可选）") @RequestParam(required = false) Long userId,
+            @Parameter(description = "项目ID（可选）") @RequestParam(required = false) Long projectId,
+            @Parameter(description = "开始日期（可选）") @RequestParam(required = false) String startDate,
+            @Parameter(description = "结束日期（可选）") @RequestParam(required = false) String endDate,
+            HttpServletResponse response) {
+        try {
+            WorkRecordExportQuery query = new WorkRecordExportQuery(userId, projectId, startDate, endDate);
+            List<WorkRecordExportVO> list = workRecordService.getExportData(query);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("工时记录", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+            EasyExcel.write(response.getOutputStream(), WorkRecordExportVO.class)
+                    .sheet("工时记录")
+                    .doWrite(list);
+        } catch (IOException e) {
+            throw new RuntimeException("导出失败", e);
+        }
     }
 }

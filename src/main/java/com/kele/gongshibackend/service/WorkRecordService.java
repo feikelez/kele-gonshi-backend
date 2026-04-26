@@ -4,6 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kele.gongshibackend.entity.WorkRecord;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
+import com.kele.gongshibackend.vo.WorkRecordExportQuery;
+import com.kele.gongshibackend.vo.WorkRecordExportVO;
+
+import java.util.List;
 
 /**
  * 工时记录服务接口
@@ -28,4 +32,11 @@ public interface WorkRecordService extends IService<WorkRecord> {
      * @return 统计结果
      */
     TopProjectsStatsVO getTopProjectsStats(String month, Integer limit);
+
+    /**
+     * 获取导出数据
+     * @param query 查询条件
+     * @return 导出数据列表
+     */
+    List<WorkRecordExportVO> getExportData(WorkRecordExportQuery query);
 }

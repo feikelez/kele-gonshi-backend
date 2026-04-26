@@ -45,4 +45,33 @@
         LIMIT #{limit}
     </select>
 
+    <!-- 导出工时记录连表查询 -->
+    <select id="selectForExport" resultType="com.kele.gongshibackend.vo.WorkRecordExportVO">
+        SELECT
+            u.real_name AS userName,
+            p.project_name AS projectName,
+            t.task_name AS taskName,
+            wr.work_content AS workContent,
+            wr.hours AS hours,
+            wr.work_date AS workDate
+        FROM work_record wr
+        LEFT JOIN sys_user u ON wr.user_id = u.id
+        LEFT JOIN project p ON wr.project_id = p.id
+        LEFT JOIN task t ON wr.task_id = t.id
+        WHERE wr.del_flag = 0
+        <if test="userId != null">
+            AND wr.user_id = #{userId}
+        </if>
+        <if test="projectId != null">
+            AND wr.project_id = #{projectId}
+        </if>
+        <if test="startDate != null and startDate != ''">
+            AND wr.work_date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND wr.work_date &lt;= #{endDate}
+        </if>
+        ORDER BY wr.work_date DESC
+    </select>
+
 </mapper>
