@@ -48,30 +48,44 @@
     <!-- 导出工时记录连表查询 -->
     <select id="selectForExport" resultType="com.kele.gongshibackend.vo.WorkRecordExportVO">
         SELECT
-            u.real_name AS userName,
-            p.project_name AS projectName,
-            t.task_name AS taskName,
-            wr.work_content AS workContent,
-            wr.hours AS hours,
-            wr.work_date AS workDate
+        u.real_name AS userName,
+        p.project_name AS projectName,
+        t.task_name AS taskName,
+        wr.work_content AS workContent,
+        wr.hours AS hours,
+        wr.work_date AS workDate
         FROM work_record wr
         LEFT JOIN sys_user u ON wr.user_id = u.id
         LEFT JOIN project p ON wr.project_id = p.id
         LEFT JOIN task t ON wr.task_id = t.id
         WHERE wr.del_flag = 0
-        <if test="userId != null">
-            AND wr.user_id = #{userId}
+        <if test="query.userId != null">
+            AND wr.user_id = #{query.userId}
         </if>
-        <if test="projectId != null">
-            AND wr.project_id = #{projectId}
+        <if test="query.projectId != null">
+            AND wr.project_id = #{query.projectId}
         </if>
-        <if test="startDate != null and startDate != ''">
-            AND wr.work_date &gt;= #{startDate}
+        <if test="query.startDate != null and query.startDate != ''">
+            AND wr.work_date &gt;= #{query.startDate}
         </if>
-        <if test="endDate != null and endDate != ''">
-            AND wr.work_date &lt;= #{endDate}
+        <if test="query.endDate != null and query.endDate != ''">
+            AND wr.work_date &lt;= #{query.endDate}
         </if>
         ORDER BY wr.work_date DESC
+    </select>
+
+    <!-- 按用户和日期范围统计每日工时 -->
+    <select id="selectDailyWorkHours" resultType="map">
+        SELECT
+            DATE_FORMAT(work_date, '%Y-%m-%d') AS day,
+            IFNULL(SUM(hours), 0) AS totalHours
+        FROM work_record
+        WHERE user_id = #{userId}
+          AND work_date &gt;= #{startDate}
+          AND work_date &lt;= #{endDate}
+          AND del_flag = 0
+        GROUP BY DATE_FORMAT(work_date, '%Y-%m-%d')
+        ORDER BY day
     </select>
 
 </mapper>

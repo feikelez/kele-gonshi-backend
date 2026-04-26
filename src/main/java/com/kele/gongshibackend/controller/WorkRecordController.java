@@ -3,9 +3,11 @@ package com.kele.gongshibackend.controller;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.kele.gongshibackend.annotation.RequireRole;
 import com.kele.gongshibackend.common.Result;
 import com.kele.gongshibackend.entity.WorkRecord;
 import com.kele.gongshibackend.service.WorkRecordService;
+import com.kele.gongshibackend.vo.DailyWorkHoursVO;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
 import com.kele.gongshibackend.vo.WorkRecordExportQuery;
@@ -290,5 +292,18 @@ public class WorkRecordController {
         } catch (IOException e) {
             throw new RuntimeException("导出失败", e);
         }
+    }
+
+    /**
+     * 按用户和日期范围统计每日工时
+     */
+    @Operation(summary = "按用户和日期范围统计每日工时")
+    @GetMapping("/user/stats")
+    public Result<List<DailyWorkHoursVO>> getDailyWorkHours(
+            @Parameter(description = "用户ID") @RequestParam Long userId,
+            @Parameter(description = "开始日期，格式 YYYY-MM-DD") @RequestParam String startDate,
+            @Parameter(description = "结束日期，格式 YYYY-MM-DD") @RequestParam String endDate) {
+        List<DailyWorkHoursVO> result = workRecordService.getDailyWorkHours(userId, startDate, endDate);
+        return Result.success("查询成功", result);
     }
 }

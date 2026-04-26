@@ -6,6 +6,7 @@ import com.kele.gongshibackend.entity.WorkRecord;
 import com.kele.gongshibackend.mapper.WorkRecordMapper;
 import com.kele.gongshibackend.service.ProjectService;
 import com.kele.gongshibackend.service.WorkRecordService;
+import com.kele.gongshibackend.vo.DailyWorkHoursVO;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
 import com.kele.gongshibackend.vo.WorkRecordExportQuery;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +34,8 @@ public class WorkRecordServiceImpl extends ServiceImpl<WorkRecordMapper, WorkRec
 
     @Autowired
     private ProjectService projectService;
+
+    private static final String[] DAY_LABELS = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
 
     @Override
     public ProjectWeeklyStatsVO getProjectWeeklyStats(Long projectId, String month) {
@@ -72,7 +76,6 @@ public class WorkRecordServiceImpl extends ServiceImpl<WorkRecordMapper, WorkRec
         TopProjectsStatsVO vo = new TopProjectsStatsVO();
         vo.setMonth(month);
 
-        // 计算上月年月
         String lastMonth = calcLastMonth(month);
 
         List<Map<String, Object>> data = baseMapper.selectTopProjectHoursByMonth(month, lastMonth, limit);
@@ -100,5 +103,37 @@ public class WorkRecordServiceImpl extends ServiceImpl<WorkRecordMapper, WorkRec
     @Override
     public List<WorkRecordExportVO> getExportData(WorkRecordExportQuery query) {
         return baseMapper.selectForExport(query);
+    }
+
+    @Override
+    public List<DailyWorkHoursVO> getDailyWorkHours(Long userId, String startDate, String endDate) {
+        List<Map<String, Object>> rawData = baseMapper.selectDailyWorkHours(userId, startDate, endDate);
+
+        Map<String, BigDecimal> hoursMap = new HashMap<>();
+        for (Map<String, Object> row : rawData) {
+            String day = (String) row.get("day");
+            BigDecimal hours = (BigDecimal) row.get("totalHours");
+            hoursMap.put(day, hours);
+        }
+
+        LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        List<DailyWorkHoursVO> result = new ArrayList<>();
+        LocalDate current = start;
+        while (!current.isAfter(end)) {
+            String dayStr = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            BigDecimal hours = hoursMap.getOrDefault(dayStr, BigDecimal.ZERO);
+
+            WeekFields weekFields = WeekFields.of(java.util.Locale.CHINA);
+            int dayOfWeek = current.get(weekFields.dayOfWeek());
+            int labelIndex = dayOfWeek - 1;
+
+            result.add(new DailyWorkHoursVO(DAY_LABELS[labelIndex], hours));
+
+            current = current.plusDays(1);
+        }
+
+        return result;
     }
 }

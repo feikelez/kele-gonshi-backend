@@ -47,4 +47,16 @@ public interface WorkRecordMapper extends BaseMapper<WorkRecord> {
      * @return 导出数据列表
      */
     List<WorkRecordExportVO> selectForExport(@Param("query") WorkRecordExportQuery query);
+
+    /**
+     * 按用户和日期范围统计每日工时
+     * @param userId 用户ID
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 每日工时列表，每条记录包含 day 和 totalHours
+     */
+    List<Map<String, Object>> selectDailyWorkHours(
+            @Param("userId") Long userId,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate);
 }

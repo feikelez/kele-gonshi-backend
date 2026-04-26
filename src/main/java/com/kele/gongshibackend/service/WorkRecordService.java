@@ -2,6 +2,7 @@ package com.kele.gongshibackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kele.gongshibackend.entity.WorkRecord;
+import com.kele.gongshibackend.vo.DailyWorkHoursVO;
 import com.kele.gongshibackend.vo.ProjectWeeklyStatsVO;
 import com.kele.gongshibackend.vo.TopProjectsStatsVO;
 import com.kele.gongshibackend.vo.WorkRecordExportQuery;
@@ -39,4 +40,13 @@ public interface WorkRecordService extends IService<WorkRecord> {
      * @return 导出数据列表
      */
     List<WorkRecordExportVO> getExportData(WorkRecordExportQuery query);
+
+    /**
+     * 按用户和日期范围统计每日工时
+     * @param userId 用户ID
+     * @param startDate 开始日期，格式 YYYY-MM-DD
+     * @param endDate 结束日期，格式 YYYY-MM-DD
+     * @return 每日工时列表（周一到周日排列）
+     */
+    List<DailyWorkHoursVO> getDailyWorkHours(Long userId, String startDate, String endDate);
 }
